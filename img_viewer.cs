@@ -38,7 +38,7 @@ namespace img_viewer
         private Rect _windowRect;
         private Rect _windowRect2 = new Rect(Screen.width / 2 - 150f, Screen.height / 2 - 75f, 260f, 390f);
 
-        private string _keybind;
+        private string _keybind = "i";
 
         private bool _visible;
 
@@ -47,22 +47,24 @@ namespace img_viewer
         private const string _btextureOn = "img_viewer/Textures/icon_on";
         private const string _btextureOff = "img_viewer/Textures/icon_off";
 
-        private string _version;
+        //private string _version;
         private string _versionlastrun;
         private Texture2D _image;
 
         private WWW _imagetex;
         private string _imagefile;
 
-        private readonly string _imageurl = "file://" + KSPUtil.ApplicationRootPath.Replace("\\", "/") +
-                                   "/GameData/img_viewer/Plugins/PluginData/Images/";
 
-        private readonly string _imagedir = KSPUtil.ApplicationRootPath.Replace("\\", "/") +
-                                   "/GameData/img_viewer/Plugins/PluginData/Images/";
+        public ImgVwrSettings ImgVwrSettings = new ImgVwrSettings();
+        private readonly string kspPluginDataFldr =
+            KSPUtil.ApplicationRootPath + "GameData/img_viewer/PluginData/";
+        private static  string _imagedir = KSPUtil.ApplicationRootPath.Replace("\\", "/") +
+                                   "/GameData/img_viewer/PluginData/Images/";
+        private readonly string _imageurl = "file://" + _imagedir;
 
         private List<string> _imageList;
         private Vector2 _scrollViewVector = Vector2.zero;
-        private int _selectionGridInt;
+        private int _selectionGridInt = 0;
         private bool _showList;
         private bool _useKSPskin;
         private int _lastimg = -1;
@@ -70,7 +72,7 @@ namespace img_viewer
         private void Awake()
         {
             LoadVersion();
-            VersionCheck();
+            //VersionCheck();
             LoadSettings();
         }
 
@@ -134,7 +136,7 @@ namespace img_viewer
                 // Notes list gui.
                 _scrollViewVector = GUILayout.BeginScrollView(_scrollViewVector);
                 var _options = new[] { GUILayout.Width(225f), GUILayout.ExpandWidth(false) };
-                _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _imageList.ToArray(), 1, _options);
+                _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _imageList.ToArray(), 1,_options);
                 GUILayout.EndScrollView();
 
                 // Refresh images list.
@@ -168,6 +170,7 @@ namespace img_viewer
             GUI.DragWindow();
         }
 
+        
         private void Update()
         {
             if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind))
@@ -177,23 +180,55 @@ namespace img_viewer
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(_keybind))
             {
                 _showList = !_showList;
+                return;
             }
+            
             if (_imageList == null) return;
-            if (_lastimg == _selectionGridInt) return;
-            Destroy(_image);
-            _imagefile = _imageList[_selectionGridInt];
-            _imagetex = new WWW(_imageurl + _imagefile);
-            _image = _imagetex.texture;
-            _imagetex.Dispose();
-            _lastimg = _selectionGridInt;
+
+            if (_lastimg != _selectionGridInt)
+            {
+                Destroy(_image);
+                if (_selectionGridInt > 0)
+                {
+                    _imagefile = _imageList[_selectionGridInt];
+                    _imagetex = new WWW(_imageurl + _imagefile);
+                    _image = _imagetex.texture;
+                    _imagetex.Dispose();
+                    // Let's be sure it isn't bigger than the screen size
+                    if (_image.width > Screen.width || _image.height > Screen.height)
+                    {
+
+                        float finalRatio = Mathf.Min((float)Screen.width / (float)_image.width, (float)Screen.width / (float)_image.height);
+
+                        float finalWidth = (float)_image.width * finalRatio;
+                        float finalHeight = (float)_image.height * finalRatio;
+
+                        TextureScale.Bilinear(_image, (int)finalWidth, (int)finalHeight);
+
+                    }
+                    _lastimg = _selectionGridInt;
+                    if (!_visible)
+                        Toggle();
+                }
+                else
+                {
+                    if (_visible)
+                        Toggle(true);
+                }
+            }
         }
 
         private void GetImages()
         {
+
             if (Directory.GetFiles(_imagedir, "*").Any())
             {
-                _imageList = new List<string>(Directory.GetFiles(_imagedir, "*"));
-                for (int i = 0; i < _imageList.Count; i++)
+
+                _imageList = new List<string>();
+                _imageList.Add("Hide Image Window");
+                var f  = new List<string>(Directory.GetFiles(_imagedir, "*"));
+                _imageList.AddRange(f);
+                for (int i = 1; i < _imageList.Count; i++)
                 {
                     _imageList[i] = Path.GetFileName(_imageList[i]);
                 }
@@ -209,20 +244,25 @@ namespace img_viewer
             }
         }
 
+        private void createSettings()
+        {
+            ImgVwrSettings.Create();
+            ImgVwrSettings.Save();
+        }
         private void LoadSettings()
         {
             print("[img_viewer.dll] Loading Config...");
-            PluginConfiguration _configfile = PluginConfiguration.CreateForType<ImgViewer>();
-            _configfile.load();
+            if (!System.IO.File.Exists(kspPluginDataFldr + "img_viewer.cfg"))
+                createSettings();
+            ImgVwrSettings.Load();
 
-            _windowRect = _configfile.GetValue<Rect>("windowpos");
-            _windowRect2 = _configfile.GetValue("windowpos2",
-                new Rect(Screen.width / 2 - 150f, Screen.height / 2 - 75f, 270f, 390f));
-            _keybind = _configfile.GetValue("keybind", "i");
-            _versionlastrun = _configfile.GetValue<string>("version");
-            _useKSPskin = _configfile.GetValue("kspskin", false);
-            _visible = _configfile.GetValue("visible", false);
-            _selectionGridInt = _configfile.GetValue("lastimage", 0);
+            _windowRect = ImgVwrSettings.GetValue("windowpos", new Rect(1,1,2,2));
+            _windowRect2 = ImgVwrSettings.GetValue("windowpos2", new Rect(Screen.width / 2 - 150f, Screen.height / 2 - 75f, 270f, 390f));
+            _keybind = ImgVwrSettings.GetValue("keybind", "i");
+            _versionlastrun = ImgVwrSettings.GetValue("version", "");
+            _useKSPskin = ImgVwrSettings.GetValue("kspskin", false);
+            _visible = ImgVwrSettings.GetValue("visible", false);
+            _selectionGridInt = ImgVwrSettings.GetValue("lastimage", 0);
 
             print("[img_viewer.dll] Config Loaded Successfully");
         }
@@ -230,27 +270,27 @@ namespace img_viewer
         private void SaveSettings()
         {
             print("[img_viewer.dll] Saving Config...");
-            PluginConfiguration _configfile = PluginConfiguration.CreateForType<ImgViewer>();
+            
 
-            _configfile.SetValue("windowpos", _windowRect);
-            _configfile.SetValue("windowpos2", _windowRect2);
-            _configfile.SetValue("keybind", _keybind);
-            _configfile.SetValue("version", _version);
-            _configfile.SetValue("kspskin", _useKSPskin);
-            _configfile.SetValue("visible", _visible);
-            _configfile.SetValue("lastimage", _selectionGridInt);
+            ImgVwrSettings.SetValue("windowpos", _windowRect);
+            ImgVwrSettings.SetValue("windowpos2", _windowRect2);
+            ImgVwrSettings.SetValue("keybind", _keybind);
+           // ImgVwrSettings.SetValue("version", _version);
+            ImgVwrSettings.SetValue("kspskin", _useKSPskin);
+            ImgVwrSettings.SetValue("visible", _visible);
+            ImgVwrSettings.SetValue("lastimage", _selectionGridInt);
 
-            _configfile.save();
+            ImgVwrSettings.Save();
             print("[img_viewer.dll] Config Saved ");
         }
 
-        private void Toggle()
+        private void Toggle(bool keepShowlist = false)
         {
             if (_visible)
             {
                 _visible = false;
                 _button.TexturePath = _btextureOff;
-                if (_showList)
+                if (_showList && !keepShowlist)
                 {
                     _showList = false;
                 }
@@ -262,24 +302,28 @@ namespace img_viewer
             }
         }
 
+#if false
         private void VersionCheck()
         {
             _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             print("img_viewer.dll version: " + _version);
-            if ((_version != _versionlastrun) && (File.Exists<ImgViewer>("config.xml")))
+            if ((_version != _versionlastrun) && (System.IO.File.Exists(kspPluginDataFldr + "img_viewer.cfg")))
             {
-                File.Delete<ImgViewer>("config.xml");
+                
+                System.IO.File.Delete(kspPluginDataFldr + "img_viewer.cfg");
             }
 #if DEBUG
-            File.Delete<ImgViewer>("config.xml");
+           // File.Delete(kspPluginDataFldr + "config.xml");
 #endif
         }
+#endif
 
         private void LoadVersion()
         {
-            PluginConfiguration _configfile = PluginConfiguration.CreateForType<ImgViewer>();
-            _configfile.load();
-            _versionlastrun = _configfile.GetValue<string>("version");
+            if (!System.IO.File.Exists(kspPluginDataFldr + "img_viewer.cfg"))
+                createSettings();
+            ImgVwrSettings.Load();
+            _versionlastrun = ImgVwrSettings.GetValue("version", "");
         }
 
         private void TogglePopupMenu(IButton button)
@@ -300,8 +344,8 @@ namespace img_viewer
             PopupMenuDrawable _menu = new PopupMenuDrawable();
 
             // create menu options
-            IButton _option1 = _menu.AddOption("Show/Hide image");
-            _option1.OnClick += e => Toggle();
+            //IButton _option1 = _menu.AddOption("Show/Hide image");
+            //_option1.OnClick += e => Toggle();
             IButton _option2 = _menu.AddOption("Show/hide image list");
             _option2.OnClick += e => _showList = !_showList;
             IButton _option3 = _menu.AddOption("Change skin");
