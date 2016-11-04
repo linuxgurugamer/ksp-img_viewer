@@ -44,8 +44,8 @@ namespace img_viewer
 
         private IButton _button;
         private const string _tooltip = "Image Viewer Menu";
-        private const string _btextureOn = "img_viewer/Textures/icon_on";
-        private const string _btextureOff = "img_viewer/Textures/icon_off";
+        private const string _btextureOn = "ImageViewer/Textures/icon_on";
+        private const string _btextureOff = "ImageViewer/Textures/icon_off";
 
         //private string _version;
         private string _versionlastrun;
@@ -57,9 +57,9 @@ namespace img_viewer
 
         public ImgVwrSettings ImgVwrSettings = new ImgVwrSettings();
         private readonly string kspPluginDataFldr =
-            KSPUtil.ApplicationRootPath + "GameData/img_viewer/PluginData/";
+            KSPUtil.ApplicationRootPath + "GameData/ImageViewer/PluginData/";
         private static  string _imagedir = KSPUtil.ApplicationRootPath.Replace("\\", "/") +
-                                   "/GameData/img_viewer/PluginData/Images/";
+                                   "/GameData/ImageViewer/PluginData/Images/";
         private readonly string _imageurl = "file://" + _imagedir;
 
         private List<string> _imageList;
@@ -71,7 +71,7 @@ namespace img_viewer
 
         private void Awake()
         {
-            LoadVersion();
+            //LoadVersion();
             //VersionCheck();
             LoadSettings();
         }
@@ -85,7 +85,7 @@ namespace img_viewer
             }
             // toolbar stuff
             if (!ToolbarManager.ToolbarAvailable) return;
-            _button = ToolbarManager.Instance.add("img_viewer", "toggle");
+            _button = ToolbarManager.Instance.add("ImageViewer", "toggle");
             _button.TexturePath = _btextureOff;
             _button.ToolTip = _tooltip;
             _button.OnClick += (e => TogglePopupMenu(_button));
@@ -251,25 +251,27 @@ namespace img_viewer
         }
         private void LoadSettings()
         {
-            print("[img_viewer.dll] Loading Config...");
-            if (!System.IO.File.Exists(kspPluginDataFldr + "img_viewer.cfg"))
+            print("[ImageViewer.dll] Loading Config...");
+            if (!System.IO.File.Exists(kspPluginDataFldr + "ImageViewer.cfg"))
                 createSettings();
             ImgVwrSettings.Load();
 
             _windowRect = ImgVwrSettings.GetValue("windowpos", new Rect(1,1,2,2));
             _windowRect2 = ImgVwrSettings.GetValue("windowpos2", new Rect(Screen.width / 2 - 150f, Screen.height / 2 - 75f, 270f, 390f));
             _keybind = ImgVwrSettings.GetValue("keybind", "i");
+            if (_keybind == "")
+                _keybind = "i";
             _versionlastrun = ImgVwrSettings.GetValue("version", "");
             _useKSPskin = ImgVwrSettings.GetValue("kspskin", false);
             _visible = ImgVwrSettings.GetValue("visible", false);
             _selectionGridInt = ImgVwrSettings.GetValue("lastimage", 0);
 
-            print("[img_viewer.dll] Config Loaded Successfully");
+            print("[ImageViewer.dll] Config Loaded Successfully");
         }
 
         private void SaveSettings()
         {
-            print("[img_viewer.dll] Saving Config...");
+            print("[ImageViewer.dll] Saving Config...");
             
 
             ImgVwrSettings.SetValue("windowpos", _windowRect);
@@ -281,7 +283,7 @@ namespace img_viewer
             ImgVwrSettings.SetValue("lastimage", _selectionGridInt);
 
             ImgVwrSettings.Save();
-            print("[img_viewer.dll] Config Saved ");
+            print("[ImageViewer.dll] Config Saved ");
         }
 
         private void Toggle(bool keepShowlist = false)
@@ -306,25 +308,26 @@ namespace img_viewer
         private void VersionCheck()
         {
             _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            print("img_viewer.dll version: " + _version);
-            if ((_version != _versionlastrun) && (System.IO.File.Exists(kspPluginDataFldr + "img_viewer.cfg")))
+            print("ImageViewer.dll version: " + _version);
+            if ((_version != _versionlastrun) && (System.IO.File.Exists(kspPluginDataFldr + "ImageViewer.cfg")))
             {
                 
-                System.IO.File.Delete(kspPluginDataFldr + "img_viewer.cfg");
+                System.IO.File.Delete(kspPluginDataFldr + "ImageViewer.cfg");
             }
 #if DEBUG
            // File.Delete(kspPluginDataFldr + "config.xml");
 #endif
         }
-#endif
+
 
         private void LoadVersion()
         {
-            if (!System.IO.File.Exists(kspPluginDataFldr + "img_viewer.cfg"))
+            if (!System.IO.File.Exists(kspPluginDataFldr + "ImageViewer.cfg"))
                 createSettings();
             ImgVwrSettings.Load();
             _versionlastrun = ImgVwrSettings.GetValue("version", "");
         }
+#endif
 
         private void TogglePopupMenu(IButton button)
         {

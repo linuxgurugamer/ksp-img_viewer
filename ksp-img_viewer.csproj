@@ -59,7 +59,7 @@
   <ItemGroup>
     <None Include="buildRelease.bat" />
     <None Include="deploy.bat" />
-    <None Include="ImageViewer.version" />
+    <None Include="ImageViewerCont.version" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

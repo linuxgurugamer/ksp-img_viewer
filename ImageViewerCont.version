@@ -1,10 +1,10 @@
 ﻿{
-  "NAME": "ImageViewer",
+  "NAME": "ImageViewerContinued",
   "URL": "http://ksp-avc.cybutek.net/version.php?id=381",
   "VERSION": {
     "MAJOR": 0,
     "MINOR": 0,
-    "PATCH": 1,
+    "PATCH": 2,
     "BUILD": 0
   },
   "KSP_VERSION": {

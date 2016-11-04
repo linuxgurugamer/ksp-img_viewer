@@ -1,7 +1,7 @@
 ﻿@echo off
 
 copy /y bin\Release\ImageViewer.dll GameData\ImageViewer\Plugins
-copy  /y ImageViewer.version GameData\ImageViewer\ImageViewer.version
+copy  /y ImageViewerCont.version GameData\ImageViewer\ImageViewerCont.version
 
 set DEFHOMEDRIVE=d:
 set DEFHOMEDIR=%DEFHOMEDRIVE%%HOMEPATH%
@@ -24,7 +24,7 @@ if "%_test%" == ":" (
 set HOMEDRIVE=%HOMEDIR:~0,2%
 )
 
-type ImageViewer.version
+type ImageViewerCont.version
 set /p VERSION= "Enter version: "
 
 
@@ -37,7 +37,7 @@ copy LICENSE %HOMEDIR%\install\Gamedata\ImageViewer
 %HOMEDRIVE%
 cd %HOMEDIR%\install
 
-set FILE="%RELEASEDIR%\ImageViewer-%VERSION%.zip"
+set FILE="%RELEASEDIR%\ImageViewerCont-%VERSION%.zip"
 IF EXIST %FILE% del /F %FILE%
 %ZIP% a -tzip %FILE% GameData\ImageViewer
 pause

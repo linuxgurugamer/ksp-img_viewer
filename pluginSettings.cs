@@ -32,7 +32,7 @@ namespace img_viewer
 
         public bool Load()
         {
-            configFile = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/img_viewer/PluginData/img_viewer.cfg");
+            configFile = ConfigNode.Load(KSPUtil.ApplicationRootPath + "GameData/ImageViewer/PluginData/ImageViewer.cfg");
             if (configFile != null)
                 configFileNode = configFile.GetNode("IMAGEVIEWER");
             return configFile != null;
@@ -40,7 +40,7 @@ namespace img_viewer
 
         public void Save()
         {
-            configFile.Save(KSPUtil.ApplicationRootPath + "GameData/img_viewer/PluginData/img_viewer.cfg");
+            configFile.Save(KSPUtil.ApplicationRootPath + "GameData/ImageViewer/PluginData/ImageViewer.cfg");
         }
 
         public void SetValue(string name, string value)
