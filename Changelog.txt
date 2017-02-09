@@ -6,3 +6,5 @@
 		Null ref fixed which occured when no toolbar installed and the "Hide Image Window" was clicked
 		issue fixed where clicking the "Hide Image Window" and then trying to show another image would either fail or show a tiny window with nothing in it
 		Removed extra .version file
+0.0.3.1
+		Removed some log spam

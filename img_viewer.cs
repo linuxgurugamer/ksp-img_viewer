@@ -201,8 +201,7 @@ namespace img_viewer
             }
             
             if (_imageList == null) return;
-
-            Debug.Log("_lastimag: " +_lastimg.ToString() + "    _selectionGridImt: " + _selectionGridInt.ToString());
+            
             if (_lastimg != _selectionGridInt)
             {
                 Destroy(_image);
