@@ -32,7 +32,7 @@ using File = KSP.IO.File;
 
 namespace img_viewer
 {
-    [KSPAddon(KSPAddon.Startup.EveryScene, false)]
+    [KSPAddon(KSPAddon.Startup.EveryScene, true)]
     public class ImgViewer : MonoBehaviour
     {
         private Rect _windowRect;
@@ -40,7 +40,7 @@ namespace img_viewer
 
         private string _keybind = "i";
 
-        private bool _visible;
+        private bool _visible = false;
 
         private IButton _button;
         private const string _tooltip = "Image Viewer Menu";
@@ -74,6 +74,15 @@ namespace img_viewer
             //LoadVersion();
             //VersionCheck();
             LoadSettings();
+            GameEvents.onGameSceneLoadRequested.Add(onSceneChange);
+
+        }
+        public void onSceneChange(GameScenes scene)
+        {
+            //if (_showList && !keepShowlist)
+            {
+                _showList = false;
+            }
         }
 
         private void Start()
@@ -83,20 +92,27 @@ namespace img_viewer
             {
                 GetImages();
             }
+            DontDestroyOnLoad(this);
             // toolbar stuff
             if (!ToolbarManager.ToolbarAvailable) return;
             _button = ToolbarManager.Instance.add("ImageViewer", "toggle");
             _button.TexturePath = _btextureOff;
             _button.ToolTip = _tooltip;
             _button.OnClick += (e => TogglePopupMenu(_button));
+           
         }
-
+        bool resetSize = false;
         private void OnGUI()
         {
             // Saves the current Gui.skin for later restore
             GUISkin _defGuiSkin = GUI.skin;
             if (_visible)
             {
+                if (resetSize)
+                {
+                    ImageOrig();
+                    resetSize = false;
+                }
                 GUI.skin = _useKSPskin ? HighLogic.Skin : _defGuiSkin;
                 _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, IvWindow,
                     "Image viewer");
@@ -109,6 +125,7 @@ namespace img_viewer
             }
             //Restore the skin
             GUI.skin = _defGuiSkin;
+           
         }
 
         private void IvWindow(int windowID)
@@ -185,15 +202,19 @@ namespace img_viewer
             
             if (_imageList == null) return;
 
+            Debug.Log("_lastimag: " +_lastimg.ToString() + "    _selectionGridImt: " + _selectionGridInt.ToString());
             if (_lastimg != _selectionGridInt)
             {
                 Destroy(_image);
+                resetSize = true;
+                _lastimg = _selectionGridInt;
                 if (_selectionGridInt > 0)
                 {
                     _imagefile = _imageList[_selectionGridInt];
                     _imagetex = new WWW(_imageurl + _imagefile);
                     _image = _imagetex.texture;
                     _imagetex.Dispose();
+                  
                     // Let's be sure it isn't bigger than the screen size
                     if (_image.width > Screen.width || _image.height > Screen.height)
                     {
@@ -206,12 +227,13 @@ namespace img_viewer
                         TextureScale.Bilinear(_image, (int)finalWidth, (int)finalHeight);
 
                     }
-                    _lastimg = _selectionGridInt;
+                   // _lastimg = _selectionGridInt;
                     if (!_visible)
                         Toggle();
                 }
                 else
                 {
+                  //  _lastimg = _selectionGridInt;
                     if (_visible)
                         Toggle(true);
                 }
@@ -242,6 +264,7 @@ namespace img_viewer
             {
                 _button.Destroy();
             }
+            GameEvents.onGameSceneLoadRequested.Remove(onSceneChange);
         }
 
         private void createSettings()
@@ -291,7 +314,8 @@ namespace img_viewer
             if (_visible)
             {
                 _visible = false;
-                _button.TexturePath = _btextureOff;
+                if (_button != null)
+                    _button.TexturePath = _btextureOff;
                 if (_showList && !keepShowlist)
                 {
                     _showList = false;
@@ -300,7 +324,8 @@ namespace img_viewer
             else
             {
                 _visible = true;
-                _button.TexturePath = _btextureOn;
+                if (_button != null)
+                    _button.TexturePath = _btextureOn;
             }
         }
 

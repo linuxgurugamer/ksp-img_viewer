@@ -1,0 +1,8 @@
+0.0.2	
+		Initial release
+
+0.0.3
+		Fixed problem with multiple list windows opening up, but only one being active
+		Null ref fixed which occured when no toolbar installed and the "Hide Image Window" was clicked
+		issue fixed where clicking the "Hide Image Window" and then trying to show another image would either fail or show a tiny window with nothing in it
+		Removed extra .version file
