@@ -10,5 +10,8 @@
 		Removed some log spam
 
 0.0.3.2
+		Rebuild for 1.3
+
+0.0.3.3
 		Removed saving of the _visible flag, so it won't always open
 		Changed included SpaceTux image
