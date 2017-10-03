@@ -64,8 +64,8 @@ namespace img_viewer
 
         private List<string> _imageList;
         private Vector2 _scrollViewVector = Vector2.zero;
-        private int _selectionGridInt = 0;
-        private bool _showList;
+        private int _selectionGridInt = -1;
+        private bool _showList = false;
         private bool _useKSPskin;
         private int _lastimg = -1;
 
@@ -140,9 +140,8 @@ namespace img_viewer
                 _windowRect = new Rect(Screen.width / 2f, Screen.height / 2f, 100f, 100f);
             }
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
-            {
                 Toggle();
-            }
+
             GUI.DragWindow();
         }
 
@@ -191,9 +190,8 @@ namespace img_viewer
         private void Update()
         {
             if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind))
-            {
                 Toggle();
-            }
+
             if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(_keybind))
             {
                 _showList = !_showList;
@@ -202,7 +200,7 @@ namespace img_viewer
             
             if (_imageList == null) return;
             
-            if (_lastimg != _selectionGridInt)
+            if (_lastimg != _selectionGridInt )
             {
                 Destroy(_image);
                 resetSize = true;
@@ -226,15 +224,19 @@ namespace img_viewer
                         TextureScale.Bilinear(_image, (int)finalWidth, (int)finalHeight);
 
                     }
-                   // _lastimg = _selectionGridInt;
+                    // _lastimg = _selectionGridInt;
+
                     if (!_visible)
-                        Toggle();
+                        Toggle(true);
+  
+
                 }
                 else
                 {
-                  //  _lastimg = _selectionGridInt;
+                    //  _lastimg = _selectionGridInt;
                     if (_visible)
                         Toggle(true);
+ 
                 }
             }
         }
@@ -287,7 +289,7 @@ namespace img_viewer
             _useKSPskin = ImgVwrSettings.GetValue("kspskin", false);
             //_visible = ImgVwrSettings.GetValue("visible", false);
             _selectionGridInt = ImgVwrSettings.GetValue("lastimage", 0);
-
+            _lastimg = _selectionGridInt; // Needed to keep last image from being shown on game start
             print("[ImageViewer.dll] Config Loaded Successfully");
         }
 
