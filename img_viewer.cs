@@ -285,7 +285,7 @@ namespace img_viewer
                 _keybind = "i";
             _versionlastrun = ImgVwrSettings.GetValue("version", "");
             _useKSPskin = ImgVwrSettings.GetValue("kspskin", false);
-            _visible = ImgVwrSettings.GetValue("visible", false);
+            //_visible = ImgVwrSettings.GetValue("visible", false);
             _selectionGridInt = ImgVwrSettings.GetValue("lastimage", 0);
 
             print("[ImageViewer.dll] Config Loaded Successfully");
@@ -301,7 +301,7 @@ namespace img_viewer
             ImgVwrSettings.SetValue("keybind", _keybind);
            // ImgVwrSettings.SetValue("version", _version);
             ImgVwrSettings.SetValue("kspskin", _useKSPskin);
-            ImgVwrSettings.SetValue("visible", _visible);
+            //ImgVwrSettings.SetValue("visible", _visible);
             ImgVwrSettings.SetValue("lastimage", _selectionGridInt);
 
             ImgVwrSettings.Save();

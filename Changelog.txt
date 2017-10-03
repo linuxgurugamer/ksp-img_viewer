@@ -8,3 +8,7 @@
 		Removed extra .version file
 0.0.3.1
 		Removed some log spam
+
+0.0.3.2
+		Removed saving of the _visible flag, so it won't always open
+		Changed included SpaceTux image
