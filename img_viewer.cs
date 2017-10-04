@@ -186,7 +186,33 @@ namespace img_viewer
             GUI.DragWindow();
         }
 
-        
+        void LoadImageFromFile(int idx, bool showIfVisible = true)
+        {
+            Debug.Log("LoadImageFromFile, idx: " + idx + ",   imageList.Count: " + _imageList.Count);
+            _imagefile = _imageList[idx];
+            _imagetex = new WWW(_imageurl + _imagefile);
+            _image = _imagetex.texture;
+            _imagetex.Dispose();
+
+            // Let's be sure it isn't bigger than the screen size
+            if (_image.width > Screen.width || _image.height > Screen.height)
+            {
+
+                float finalRatio = Mathf.Min((float)Screen.width / (float)_image.width, (float)Screen.width / (float)_image.height);
+
+                float finalWidth = (float)_image.width * finalRatio;
+                float finalHeight = (float)_image.height * finalRatio;
+
+                TextureScale.Bilinear(_image, (int)finalWidth, (int)finalHeight);
+
+            }
+            // _lastimg = _selectionGridInt;
+
+            if (showIfVisible && !_visible)
+                Toggle(true);
+
+        }
+
         private void Update()
         {
             if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind))
@@ -202,41 +228,19 @@ namespace img_viewer
             
             if (_lastimg != _selectionGridInt )
             {
+                
                 Destroy(_image);
                 resetSize = true;
                 _lastimg = _selectionGridInt;
                 if (_selectionGridInt > 0)
                 {
-                    _imagefile = _imageList[_selectionGridInt];
-                    _imagetex = new WWW(_imageurl + _imagefile);
-                    _image = _imagetex.texture;
-                    _imagetex.Dispose();
-                  
-                    // Let's be sure it isn't bigger than the screen size
-                    if (_image.width > Screen.width || _image.height > Screen.height)
-                    {
-
-                        float finalRatio = Mathf.Min((float)Screen.width / (float)_image.width, (float)Screen.width / (float)_image.height);
-
-                        float finalWidth = (float)_image.width * finalRatio;
-                        float finalHeight = (float)_image.height * finalRatio;
-
-                        TextureScale.Bilinear(_image, (int)finalWidth, (int)finalHeight);
-
-                    }
-                    // _lastimg = _selectionGridInt;
-
-                    if (!_visible)
-                        Toggle(true);
-  
-
+                    LoadImageFromFile(_selectionGridInt);
                 }
                 else
                 {
                     //  _lastimg = _selectionGridInt;
                     if (_visible)
                         Toggle(true);
- 
                 }
             }
         }
@@ -255,6 +259,8 @@ namespace img_viewer
                 {
                     _imageList[i] = Path.GetFileName(_imageList[i]);
                 }
+                if (_selectionGridInt > 0)
+                    LoadImageFromFile(_selectionGridInt, false);
             }
         }
 
@@ -289,7 +295,7 @@ namespace img_viewer
             _useKSPskin = ImgVwrSettings.GetValue("kspskin", false);
             //_visible = ImgVwrSettings.GetValue("visible", false);
             _selectionGridInt = ImgVwrSettings.GetValue("lastimage", 0);
-            _lastimg = _selectionGridInt; // Needed to keep last image from being shown on game start
+            _lastimg = _selectionGridInt; // Needed to keep last image from being shown on game start            
             print("[ImageViewer.dll] Config Loaded Successfully");
         }
 

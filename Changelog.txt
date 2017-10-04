@@ -15,3 +15,6 @@
 0.0.3.3
 		Removed saving of the _visible flag, so it won't always open
 		Changed included SpaceTux image
+
+0.0.3.4
+		now loads last image displayed when loading, so it can be displayed immediately when requested
