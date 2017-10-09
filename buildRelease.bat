@@ -1,12 +1,28 @@
-﻿@echo off
+﻿
+@echo off
 
-copy /y bin\Release\ImageViewer.dll GameData\ImageViewer\Plugins
-copy  /y ImageViewerCont.version GameData\ImageViewer\ImageViewerCont.version
+rem Set variables here
+
+set GAMEDIR=ImageViewer
+set VERSIONFILE=ImageViewerCont
+set LICENSE=LICENSE
+set README=ReadMe.md
 
 set RELEASEDIR=d:\Users\jbb\release
 set ZIP="c:\Program Files\7-zip\7z.exe"
 
-set VERSIONFILE=ImageViewerCont.version
+rem Copy files to GameData locations
+
+copy /Y "%1%2" "GameData\%GAMEDIR%\Plugins"
+copy /Y %VERSIONFILE%.version GameData\%GAMEDIR%
+copy /Y ..\MiniAVC.dll GameData\%GAMEDIR%
+
+if "%LICENSE%" NEQ "" copy /y  %LICENSE% GameData\%GAMEDIR%
+if "%README%" NEQ "" copy /Y %README% GameData\%GAMEDIR%
+
+rem Get Version info
+
+set VERSIONFILE=%VERSIONFILE%.version
 rem The following requires the JQ program, available here: https://stedolan.github.io/jq/download/
 c:\local\jq-win64  ".VERSION.MAJOR" %VERSIONFILE% >tmpfile
 set /P major=<tmpfile
@@ -23,11 +39,13 @@ del tmpfile
 set VERSION=%major%.%minor%.%patch%
 if "%build%" NEQ "0"  set VERSION=%VERSION%.%build%
 
+echo Version:  %VERSION%
 
-copy ..\MiniAVC.dll Gamedata\ImageViewer
-copy LICENSE Gamedata\ImageViewer
 
-set FILE="%RELEASEDIR%\ImageViewerCont-%VERSION%.zip"
+rem Build the zip FILE
+
+set FILE="%RELEASEDIR%\%GAMEDIR%-%VERSION%.zip"
 IF EXIST %FILE% del /F %FILE%
-%ZIP% a -tzip %FILE% GameData\ImageViewer
+%ZIP% a -tzip %FILE% GameData
+
 pause

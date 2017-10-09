@@ -4,3 +4,6 @@
 3.  Add a file browser
 
 4. Make the interface work a bit nicer.  It's awkward right now, IMHO
+
+Add Settings page
+Make key configurable

@@ -104,10 +104,11 @@ namespace img_viewer
         bool resetSize = false;
         private void OnGUI()
         {
-            // Saves the current Gui.skin for later restore
-            GUISkin _defGuiSkin = GUI.skin;
+           // The GUI.skin has been moved inside the two "if" sections to minimize the performance impact when not being used            
             if (_visible)
             {
+                // Saves the current Gui.skin for later restore
+                GUISkin _defGuiSkin = GUI.skin;
                 if (resetSize)
                 {
                     ImageOrig();
@@ -116,15 +117,20 @@ namespace img_viewer
                 GUI.skin = _useKSPskin ? HighLogic.Skin : _defGuiSkin;
                 _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, IvWindow,
                     "Image viewer");
+                //Restore the skin
+                GUI.skin = _defGuiSkin;
             }
             if (_showList)
             {
+                // Saves the current Gui.skin for later restore
+                GUISkin _defGuiSkin = GUI.skin;
                 GUI.skin = _useKSPskin ? HighLogic.Skin : _defGuiSkin;
                 _windowRect2 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow,
                     "Image list");
+                //Restore the skin
+                GUI.skin = _defGuiSkin;
             }
-            //Restore the skin
-            GUI.skin = _defGuiSkin;
+
            
         }
 
@@ -228,7 +234,6 @@ namespace img_viewer
             
             if (_lastimg != _selectionGridInt )
             {
-                
                 Destroy(_image);
                 resetSize = true;
                 _lastimg = _selectionGridInt;
@@ -279,6 +284,7 @@ namespace img_viewer
             ImgVwrSettings.Create();
             ImgVwrSettings.Save();
         }
+
         private void LoadSettings()
         {
             print("[ImageViewer.dll] Loading Config...");

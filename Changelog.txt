@@ -17,4 +17,4 @@
 		Changed included SpaceTux image
 
 0.0.3.4
-		now loads last image displayed when loading, so it can be displayed immediately when requested
+		Now loads last image displayed when loading, so it can be displayed immediately when requested
