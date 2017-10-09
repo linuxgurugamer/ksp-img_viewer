@@ -1,11 +1,11 @@
 ﻿{
   "NAME": "ImageViewerContinued",
-  "URL": "http://ksp-avc.cybutek.net/version.php?id=381",
+  "URL": "https://raw.githubusercontent.com/linuxgurugamer/ksp-img_viewer/master/ImageViewerCont.version",
   "VERSION": {
     "MAJOR": 0,
     "MINOR": 0,
     "PATCH": 4,
-    "BUILD": 0
+    "BUILD": 1
   },
   "KSP_VERSION": {
     "MAJOR": 1,
