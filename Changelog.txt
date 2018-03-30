@@ -21,3 +21,9 @@
 
 0.0.4
 		Updated for KSP 1.3.1
+
+0.0.5
+		Updated for KSP 1.4.1
+		Added support for the ClickThroughBlocker
+		Added support for the ToolbarController
+			Replaced old toolbar popupmenu code with local menu which applies to both button types

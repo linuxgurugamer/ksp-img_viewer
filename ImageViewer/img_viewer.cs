@@ -29,6 +29,10 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using File = KSP.IO.File;
+using KSP.UI.Screens;
+
+using ClickThroughFix;
+using ToolbarControl_NS;
 
 namespace img_viewer
 {
@@ -42,7 +46,8 @@ namespace img_viewer
 
         private bool _visible = false;
 
-        private IButton _button;
+        //private IButton _button;
+        ToolbarControl toolbarControl;
         private const string _tooltip = "Image Viewer Menu";
         private const string _btextureOn = "ImageViewer/Textures/icon_on";
         private const string _btextureOff = "ImageViewer/Textures/icon_off";
@@ -67,6 +72,7 @@ namespace img_viewer
         private int _selectionGridInt = -1;
         private bool _showList = false;
         private bool _useKSPskin;
+        private bool useBlizzy = true;
         private int _lastimg = -1;
 
         private void Awake()
@@ -94,17 +100,37 @@ namespace img_viewer
             }
             DontDestroyOnLoad(this);
             // toolbar stuff
+#if false
             if (!ToolbarManager.ToolbarAvailable) return;
             _button = ToolbarManager.Instance.add("ImageViewer", "toggle");
             _button.TexturePath = _btextureOff;
             _button.ToolTip = _tooltip;
             _button.OnClick += (e => TogglePopupMenu(_button));
-           
+#endif
+            toolbarControl = gameObject.AddComponent<ToolbarControl>();
+
+            toolbarControl.AddToAllToolbars(TogglePopupMenu, TogglePopupMenu,
+                ApplicationLauncher.AppScenes.SPACECENTER |
+                ApplicationLauncher.AppScenes.VAB |
+                ApplicationLauncher.AppScenes.SPH |
+                ApplicationLauncher.AppScenes.TRACKSTATION |
+                ApplicationLauncher.AppScenes.FLIGHT |
+                ApplicationLauncher.AppScenes.MAPVIEW,
+                "ImageViewer_NS",
+                "imageViewerButtonButton",
+                _btextureOff,
+                _btextureOff,
+                "Image Viewer"
+            );
+            toolbarControl.UseBlizzy(useBlizzy);
+
         }
         bool resetSize = false;
         private void OnGUI()
         {
-           // The GUI.skin has been moved inside the two "if" sections to minimize the performance impact when not being used            
+            if (toolbarControl != null)
+                toolbarControl.UseBlizzy(useBlizzy);
+            // The GUI.skin has been moved inside the two "if" sections to minimize the performance impact when not being used            
             if (_visible)
             {
                 // Saves the current Gui.skin for later restore
@@ -115,7 +141,7 @@ namespace img_viewer
                     resetSize = false;
                 }
                 GUI.skin = _useKSPskin ? HighLogic.Skin : _defGuiSkin;
-                _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, IvWindow,
+                _windowRect = ClickThruBlocker.GUIWindow(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, IvWindow,
                     "Image viewer");
                 //Restore the skin
                 GUI.skin = _defGuiSkin;
@@ -125,13 +151,19 @@ namespace img_viewer
                 // Saves the current Gui.skin for later restore
                 GUISkin _defGuiSkin = GUI.skin;
                 GUI.skin = _useKSPskin ? HighLogic.Skin : _defGuiSkin;
-                _windowRect2 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow,
+                _windowRect2 = ClickThruBlocker.GUIWindow(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow,
                     "Image list");
                 //Restore the skin
                 GUI.skin = _defGuiSkin;
             }
 
-           
+            if (Event.current.type == EventType.Layout)
+            {
+                if (_showMenu)
+                    _menuRect = ClickThruBlocker.GUILayoutWindow(this.GetInstanceID(), _menuRect, MenuContent, "Image Viewer");
+                else
+                    _menuRect = new Rect();
+            }
         }
 
         private void IvWindow(int windowID)
@@ -182,12 +214,14 @@ namespace img_viewer
             {
                 GetImages();
             }
+
             GUI.contentColor = Color.white;
             // Close the list window.
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
             {
                 _showList = !_showList;
             }
+
             // Makes the window dragable.
             GUI.DragWindow();
         }
@@ -272,9 +306,11 @@ namespace img_viewer
         private void OnDestroy()
         {
             SaveSettings();
-            if (_button != null)
+
+            if (toolbarControl != null)
             {
-                _button.Destroy();
+                toolbarControl.OnDestroy();
+                Destroy(toolbarControl);
             }
             GameEvents.onGameSceneLoadRequested.Remove(onSceneChange);
         }
@@ -299,6 +335,8 @@ namespace img_viewer
                 _keybind = "i";
             _versionlastrun = ImgVwrSettings.GetValue("version", "");
             _useKSPskin = ImgVwrSettings.GetValue("kspskin", false);
+
+            useBlizzy = ImgVwrSettings.GetValue("useBlizzy", false);
             //_visible = ImgVwrSettings.GetValue("visible", false);
             _selectionGridInt = ImgVwrSettings.GetValue("lastimage", 0);
             _lastimg = _selectionGridInt; // Needed to keep last image from being shown on game start            
@@ -313,8 +351,11 @@ namespace img_viewer
             ImgVwrSettings.SetValue("windowpos", _windowRect);
             ImgVwrSettings.SetValue("windowpos2", _windowRect2);
             ImgVwrSettings.SetValue("keybind", _keybind);
-           // ImgVwrSettings.SetValue("version", _version);
+            // ImgVwrSettings.SetValue("version", _version);
             ImgVwrSettings.SetValue("kspskin", _useKSPskin);
+
+            ImgVwrSettings.SetValue("useBlizzy", useBlizzy);
+            
             //ImgVwrSettings.SetValue("visible", _visible);
             ImgVwrSettings.SetValue("lastimage", _selectionGridInt);
 
@@ -327,8 +368,12 @@ namespace img_viewer
             if (_visible)
             {
                 _visible = false;
+#if false
                 if (_button != null)
                     _button.TexturePath = _btextureOff;
+#endif
+                if (toolbarControl != null)
+                    toolbarControl.SetTexture(_btextureOff, _btextureOff);
                 if (_showList && !keepShowlist)
                 {
                     _showList = false;
@@ -337,77 +382,104 @@ namespace img_viewer
             else
             {
                 _visible = true;
+#if false
                 if (_button != null)
                     _button.TexturePath = _btextureOn;
+#endif  
+                if (toolbarControl != null)
+                    toolbarControl.SetTexture(_btextureOn, _btextureOn);
             }
         }
 
-#if false
-        private void VersionCheck()
+        bool _showMenu = false;
+        private void TogglePopupMenu()
         {
-            _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            print("ImageViewer.dll version: " + _version);
-            if ((_version != _versionlastrun) && (System.IO.File.Exists(kspPluginDataFldr + "ImageViewer.cfg")))
+            if (!_showMenu)
             {
-                
-                System.IO.File.Delete(kspPluginDataFldr + "ImageViewer.cfg");
+                InitShowMenu();
             }
-#if DEBUG
-           // File.Delete(kspPluginDataFldr + "config.xml");
-#endif
+  
+            _showMenu = !_showMenu;
         }
 
-
-        private void LoadVersion()
+        void MenuContent(int WindowID)
         {
-            if (!System.IO.File.Exists(kspPluginDataFldr + "ImageViewer.cfg"))
-                createSettings();
-            ImgVwrSettings.Load();
-            _versionlastrun = ImgVwrSettings.GetValue("version", "");
-        }
-#endif
-
-        private void TogglePopupMenu(IButton button)
-        {
-            if (button.Drawable == null)
+            if (GUILayout.Button("Show/hide image list"))
             {
-                createPopupMenu(button);
+                _showList = !_showList;
+            }
+
+            if (GUILayout.Button("Change skin"))
+            {
+                _useKSPskin = !_useKSPskin;
+            }
+            if (GUILayout.Button("Next image"))
+            {
+                ImageNext();
+            }
+
+            if (GUILayout.Button("Prev image"))
+            {
+                ImagePrev();
+            }
+
+            if (GUILayout.Button("-10% size"))
+            {
+                ImageZm();
+            }
+
+            if (GUILayout.Button("Original"))
+            {
+                ImageOrig();
+            }
+
+            if (GUILayout.Button("+10% size"))
+            {
+                ImageZp();
+            }
+            if (GUILayout.Button("Toggle Blizzy"))
+                useBlizzy = !useBlizzy;
+
+        }
+        Rect _menuRect = new Rect();
+        Vector2 pos;
+        const float _menuWidth = 100.0f;
+        const float menuHeight = 230f;
+        const int _toolbarHeight = 42;
+        Vector2 SetButtonPos()
+        {
+            Vector2 pos = Input.mousePosition;
+            pos.y = Screen.height - pos.y;
+            return  pos;
+        }
+        void InitShowMenu(bool firstTime = true)
+        {
+            pos = SetButtonPos();
+            int toolbarHeight = (int)(_toolbarHeight * GameSettings.UI_SCALE);
+            if (firstTime)
+            {
+                float ym = pos.y - menuHeight;
+                ym = Mathf.Max(ym, 0);
+                ym = Mathf.Min(ym, Screen.height - toolbarHeight - menuHeight);
+                _menuRect = new Rect()
+                {
+                    xMin = pos.x - _menuWidth / 2,
+                    xMax = pos.x + _menuWidth / 2,
+                    yMin = ym,
+                    yMax =Mathf.Min( Screen.height - toolbarHeight, ym + menuHeight)
+                };
+
             }
             else
             {
-                destroyPopupMenu(button);
+                _menuRect.Set(
+                    _menuRect.x,
+                    Screen.height - toolbarHeight - menuHeight,
+                     _menuRect.width,
+                     menuHeight
+                );
             }
         }
-
-        private void createPopupMenu(IButton button)
-        {
-            // create menu drawable
-            PopupMenuDrawable _menu = new PopupMenuDrawable();
-
-            // create menu options
-            //IButton _option1 = _menu.AddOption("Show/Hide image");
-            //_option1.OnClick += e => Toggle();
-            IButton _option2 = _menu.AddOption("Show/hide image list");
-            _option2.OnClick += e => _showList = !_showList;
-            IButton _option3 = _menu.AddOption("Change skin");
-            _option3.OnClick += e => _useKSPskin = !_useKSPskin;
-            IButton _option4 = _menu.AddOption("Next image");
-            _option4.OnClick += e => ImageNext();
-            IButton _option5 = _menu.AddOption("Prev image");
-            _option5.OnClick += e => ImagePrev();
-            IButton _option6 = _menu.AddOption("-10% size");
-            _option6.OnClick += e => ImageZm();
-            IButton _option7 = _menu.AddOption("Original");
-            _option7.OnClick += e => ImageOrig();
-            IButton _option8 = _menu.AddOption("+10% size");
-            _option8.OnClick += e => ImageZp();
-            // auto-close popup menu when any option is clicked
-            _menu.OnAnyOptionClicked += () => destroyPopupMenu(button);
-
-            // hook drawable to button
-            button.Drawable = _menu;
-        }
-
         private void ImagePrev()
         {
             if (_selectionGridInt == 0) return;
@@ -438,15 +510,6 @@ namespace img_viewer
         {
             TextureScale.Bilinear(_image, _image.width + ((_image.width * 10) / 100), _image.height + ((_image.height * 10) / 100));
             GUI.DrawTexture(new Rect(0f, 20f, _image.width, _image.height), _image, ScaleMode.ScaleToFit, true, 0f);
-        }
-
-        private void destroyPopupMenu(IButton button)
-        {
-            // PopupMenuDrawable must be destroyed explicitly
-            ((PopupMenuDrawable)button.Drawable).Destroy();
-
-            // unhook drawable
-            button.Drawable = null;
         }
     }
 }
