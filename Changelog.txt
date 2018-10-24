@@ -27,3 +27,6 @@
 		Added support for the ClickThroughBlocker
 		Added support for the ToolbarController
 			Replaced old toolbar popupmenu code with local menu which applies to both button types
+
+0.0.5.1
+		Version bump for 1.5 rebuild
