@@ -37,5 +37,5 @@ ChangeLog
 		Added InstallChecker.cs
 		Updated AssemblyVersion.tt
 
-0.6.0
+0.0.6
 	Updated for KSP 1.8
