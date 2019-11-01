@@ -1,7 +1,7 @@
 ﻿
 @echo off
 
-set H=R:\KSP_1.7.2_dev
+set H=%KSPDIR%
 set GAMEDIR=ImageViewer
 set VERSIONFILE=ImageViewerCont
 
