@@ -14,7 +14,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace ksp_img_viewer
+namespace img_viewer
 {
     [KSPAddon(KSPAddon.Startup.Instantly, true)]
     internal class Startup : MonoBehaviour
@@ -62,7 +62,7 @@ namespace ksp_img_viewer
                     false,
                     HighLogic.UISkin
                 );
-                Debug.Log("Incorrect " + MODNAME + " Installation: " + MODNAME + " has been installed incorrectly and will not function properly. All files should be located in KSP/GameData/" + EXPECTEDPATH + ". Do not move any files from inside that folder.\n\nIncorrect path(s):\n" + String.Join("\n", badPaths.ToArray())
+                Debug.LogError("Incorrect " + MODNAME + " Installation: " + MODNAME + " has been installed incorrectly and will not function properly. All files should be located in KSP/GameData/" + EXPECTEDPATH + ". Do not move any files from inside that folder.\n\nIncorrect path(s):\n" + String.Join("\n", badPaths.ToArray())
 
                      );
 

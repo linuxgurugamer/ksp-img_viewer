@@ -66,7 +66,7 @@ namespace img_viewer
 
         public string GetValue(string name, string d = "")
         {
-            string s = "";
+            string s = d;
             if (name == null)
                 return "";
 
@@ -75,6 +75,7 @@ namespace img_viewer
 
             return s;
         }
+
         public Rect GetValue(string name, Rect rect)
         {
             try
@@ -86,7 +87,7 @@ namespace img_viewer
             }
             catch (Exception e)
             {
-                Debug.Log("Exception converting: " + name + " -   " + e.Message);
+                Debug.LogError("Exception converting: " + name + " -   " + e.Message);
             }
             return rect;
         }
@@ -100,7 +101,7 @@ namespace img_viewer
             catch (Exception e)
             {
                 r = i;
-                Debug.Log("Exception converting: " + name + " -   " + e.Message);
+                Debug.LogError("Exception converting: " + name + " -   " + e.Message);
             }
             return r;
         }
@@ -114,7 +115,7 @@ namespace img_viewer
             catch (Exception e)
             {
                 r = b;
-                Debug.Log("Exception converting: " + name + " -   " + e.Message);
+                Debug.LogError("Exception converting: " + name + " -   " + e.Message);
             }
             return r;
         }

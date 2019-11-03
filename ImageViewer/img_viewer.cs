@@ -22,21 +22,21 @@
 //
 // -------------------------------------------------------------------------------------------------
 
-using KSP.IO;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
-using File = KSP.IO.File;
+using UnityEngine.Networking;
 using KSP.UI.Screens;
 
 using ClickThroughFix;
 using ToolbarControl_NS;
 
+
 namespace img_viewer
 {
-    [KSPAddon(KSPAddon.Startup.EveryScene, true)]
+    [KSPAddon(KSPAddon.Startup.AllGameScenes, true)]
     public class ImgViewer : MonoBehaviour
     {
         private Rect _windowRect;
@@ -45,44 +45,45 @@ namespace img_viewer
         private string _keybind = "i";
 
         private bool _visible = false;
-
-        //private IButton _button;
+        
         ToolbarControl toolbarControl;
+
+        internal const string MODID = "ImageViewer_NS";
+        internal const string MODNAME = "Image Viewer";
+
         private const string _tooltip = "Image Viewer Menu";
         private const string _btextureOn = "ImageViewer/Textures/icon_on";
         private const string _btextureOff = "ImageViewer/Textures/icon_off";
-
-        //private string _version;
+        
         private string _versionlastrun;
         private Texture2D _image;
-
-        private WWW _imagetex;
+        
         private string _imagefile;
 
 
         public ImgVwrSettings ImgVwrSettings = new ImgVwrSettings();
-        private readonly string kspPluginDataFldr =
-            KSPUtil.ApplicationRootPath + "GameData/ImageViewer/PluginData/";
-        private static  string _imagedir = KSPUtil.ApplicationRootPath.Replace("\\", "/") +
-                                   "/GameData/ImageViewer/PluginData/Images/";
-        private readonly string _imageurl = "file://" + _imagedir;
+        private string kspPluginDataFldr;
+
+        internal string _imagedir = "";
+        internal string imagedirDefault;
 
         private List<string> _imageList;
         private Vector2 _scrollViewVector = Vector2.zero;
         private int _selectionGridInt = -1;
         private bool _showList = false;
         private bool _useKSPskin;
-        private bool useBlizzy = true;
         private int _lastimg = -1;
-
+        
         private void Awake()
         {
-            //LoadVersion();
-            //VersionCheck();
+            kspPluginDataFldr = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/ImageViewer/PluginData/";
+            imagedirDefault = kspPluginDataFldr + "Images/";
+            _imagedir = imagedirDefault;
             LoadSettings();
             GameEvents.onGameSceneLoadRequested.Add(onSceneChange);
 
         }
+
         public void onSceneChange(GameScenes scene)
         {
             //if (_showList && !keepShowlist)
@@ -100,13 +101,7 @@ namespace img_viewer
             }
             DontDestroyOnLoad(this);
             // toolbar stuff
-#if false
-            if (!ToolbarManager.ToolbarAvailable) return;
-            _button = ToolbarManager.Instance.add("ImageViewer", "toggle");
-            _button.TexturePath = _btextureOff;
-            _button.ToolTip = _tooltip;
-            _button.OnClick += (e => TogglePopupMenu(_button));
-#endif
+
             toolbarControl = gameObject.AddComponent<ToolbarControl>();
 
             toolbarControl.AddToAllToolbars(TogglePopupMenu, TogglePopupMenu,
@@ -116,20 +111,17 @@ namespace img_viewer
                 ApplicationLauncher.AppScenes.TRACKSTATION |
                 ApplicationLauncher.AppScenes.FLIGHT |
                 ApplicationLauncher.AppScenes.MAPVIEW,
-                "ImageViewer_NS",
+                MODID,
                 "imageViewerButtonButton",
                 _btextureOff,
                 _btextureOff,
-                "Image Viewer"
+                MODNAME
             );
-            toolbarControl.UseBlizzy(useBlizzy);
-
         }
+
         bool resetSize = false;
         private void OnGUI()
         {
-            if (toolbarControl != null)
-                toolbarControl.UseBlizzy(useBlizzy);
             // The GUI.skin has been moved inside the two "if" sections to minimize the performance impact when not being used            
             if (_visible)
             {
@@ -228,11 +220,9 @@ namespace img_viewer
 
         void LoadImageFromFile(int idx, bool showIfVisible = true)
         {
-            Debug.Log("LoadImageFromFile, idx: " + idx + ",   imageList.Count: " + _imageList.Count);
             _imagefile = _imageList[idx];
-            _imagetex = new WWW(_imageurl + _imagefile);
-            _image = _imagetex.texture;
-            _imagetex.Dispose();
+            _image = new Texture2D(2, 2);
+            ToolbarControl.LoadImageFromFile(ref _image, _imagedir +_imagefile);
 
             // Let's be sure it isn't bigger than the screen size
             if (_image.width > Screen.width || _image.height > Screen.height)
@@ -250,7 +240,7 @@ namespace img_viewer
 
             if (showIfVisible && !_visible)
                 Toggle(true);
-
+  
         }
 
         private void Update()
@@ -336,8 +326,12 @@ namespace img_viewer
             _versionlastrun = ImgVwrSettings.GetValue("version", "");
             _useKSPskin = ImgVwrSettings.GetValue("kspskin", false);
 
-            useBlizzy = ImgVwrSettings.GetValue("useBlizzy", false);
-            //_visible = ImgVwrSettings.GetValue("visible", false);
+            _imagedir = ImgVwrSettings.GetValue("imagedir", imagedirDefault);
+            if (!Directory.Exists(_imagedir))
+            {
+                Debug.Log("Specified image directory doesn't exist: [" + _imagedir + "]");
+                _imagedir = imagedirDefault;
+            }
             _selectionGridInt = ImgVwrSettings.GetValue("lastimage", 0);
             _lastimg = _selectionGridInt; // Needed to keep last image from being shown on game start            
             print("[ImageViewer.dll] Config Loaded Successfully");
@@ -345,18 +339,16 @@ namespace img_viewer
 
         private void SaveSettings()
         {
+            if (HighLogic.CurrentGame == null)
+                return;
             print("[ImageViewer.dll] Saving Config...");
             
 
             ImgVwrSettings.SetValue("windowpos", _windowRect);
             ImgVwrSettings.SetValue("windowpos2", _windowRect2);
             ImgVwrSettings.SetValue("keybind", _keybind);
-            // ImgVwrSettings.SetValue("version", _version);
             ImgVwrSettings.SetValue("kspskin", _useKSPskin);
-
-            ImgVwrSettings.SetValue("useBlizzy", useBlizzy);
-            
-            //ImgVwrSettings.SetValue("visible", _visible);
+            ImgVwrSettings.SetValue("imagedir", _imagedir);            
             ImgVwrSettings.SetValue("lastimage", _selectionGridInt);
 
             ImgVwrSettings.Save();
@@ -437,10 +429,9 @@ namespace img_viewer
             {
                 ImageZp();
             }
-            if (GUILayout.Button("Toggle Blizzy"))
-                useBlizzy = !useBlizzy;
 
         }
+
         Rect _menuRect = new Rect();
         Vector2 pos;
         const float _menuWidth = 100.0f;
@@ -452,6 +443,7 @@ namespace img_viewer
             pos.y = Screen.height - pos.y;
             return  pos;
         }
+
         void InitShowMenu(bool firstTime = true)
         {
             pos = SetButtonPos();
@@ -500,9 +492,9 @@ namespace img_viewer
 
         private void ImageOrig()
         {
-            _imagetex = new WWW(_imageurl + _imagefile);
-            _image = _imagetex.texture;
-            _imagetex.Dispose();
+            _image = new Texture2D(2, 2);
+            ToolbarControl.LoadImageFromFile(ref _image, _imagedir + _imagefile);
+
             GUI.DrawTexture(new Rect(0f, 20f, _image.width, _image.height), _image, ScaleMode.ScaleToFit, true, 0f);
         }
 

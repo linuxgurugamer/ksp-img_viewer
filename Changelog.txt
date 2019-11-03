@@ -39,3 +39,12 @@ ChangeLog
 
 0.0.6
 	Updated for KSP 1.8
+
+0.0.6.1
+	Updated usage of ToolbarController to latest version
+	Added RegisterToolbarButton
+	Removed the "Use Blizzy" option, not needed anymore
+	Replaced old "WWW" class with ToolbarControl.LoadImageFromFile
+	Deleted ToolbarWrapper.cs (was all commented out)
+	Added imageDir to config file, so it can be overridden by a knowledgable user
+	
