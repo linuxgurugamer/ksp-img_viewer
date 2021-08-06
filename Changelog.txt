@@ -48,3 +48,7 @@ ChangeLog
 	Deleted ToolbarWrapper.cs (was all commented out)
 	Added imageDir to config file, so it can be overridden by a knowledgable user
 	
+0.0.6.2
+	Renamed DLL for CKAN compatibility
+	Added AssemblyFileVersion
+	Updated version file for 1.12
